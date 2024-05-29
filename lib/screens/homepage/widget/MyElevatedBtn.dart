@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 
-class MyElevatedBtn extends StatelessWidget {
+class MyElevatedBtn extends StatefulWidget {
+  final String? navigator;
   final String title;
   final String text;
-  const MyElevatedBtn(
-      {super.key,
-      required this.title,
-      required this.text,});
+  final String? carNum;
 
+  const MyElevatedBtn({
+    super.key,
+    required this.title,
+    required this.text,
+    this.navigator,
+    this.carNum,
+  });
+
+  @override
+  State<MyElevatedBtn> createState() => _MyElevatedBtnState();
+}
+
+class _MyElevatedBtnState extends State<MyElevatedBtn> {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
@@ -21,10 +32,14 @@ class MyElevatedBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      onPressed: (){},
+      onPressed: () async {
+        widget.navigator == null
+            ? null
+            : Navigator.pushNamed(context, '${widget.navigator}');
+      },
       child: Text(
-        text,
-        style: const TextStyle(fontSize: 50),
+        widget.text,
+        style: const TextStyle(fontSize: 30),
       ),
     );
   }

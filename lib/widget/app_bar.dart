@@ -12,7 +12,6 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text(title),
       titleTextStyle: const TextStyle(color: Colors.white, fontSize: 30),
       actions: [
-        // ���� �ð��� ǥ���ϴ� ����
         Builder(
           builder: (context) {
             return const Padding(

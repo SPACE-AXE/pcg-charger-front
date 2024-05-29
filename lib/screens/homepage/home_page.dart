@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pcg_charger/screens/car_num_screen/car_num_screen.dart';
-import 'package:pcg_charger/screens/homepage/widget/MyElevatedBtn.dart';
-import 'package:pcg_charger/screens/homepage/widget/app_bar.dart';
-import 'package:pcg_charger/screens/number_check_screen/number_check_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pcg_charger/charge_data.dart';
+import 'package:pcg_charger/widget/app_bar.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -14,9 +13,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _currentIndex = 0;
-  late List<Widget> _pages;
-
   @override
   void initState() {
     super.initState();
@@ -26,16 +22,39 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MyAppBar(title: widget.title),
-      body:  Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox(
               width: 300,
               height: 168,
-              child: ElevatedButton(onPressed: (){
-                Navigator.pushNamed(context, '/carnum');
-              }, child: Text('충전시작'),),
+              child: Consumer(
+                builder: (context, ref, child) {
+                  ChargeData data = ChargeData.makeData('38서 6107');
+                  debugPrint("data: ${data.carNum}");
+                  ref.read(chargeDataProvider).updateChargeData(data);
+                  return ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      alignment: Alignment.center,
+                      fixedSize: const Size(180, 80),
+                      backgroundColor: const Color(0xff39c5bb),
+                      foregroundColor: Colors.white,
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    onPressed: () async {
+                      Navigator.pushNamed(context, '/changecarnum');
+                    },
+                    child: Text(
+                      "충전 시작",
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                  );
+                },
+              ),
             )
           ],
         ),

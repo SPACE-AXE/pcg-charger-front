@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:pcg_charger/screens/number_check_screen/widget/animation_container.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pcg_charger/widget/app_bar.dart';
+import 'package:pcg_charger/screens/number_check_screen/widget/num_check.dart';
 
-class NumberCheckScreen extends StatelessWidget {
-  const NumberCheckScreen(
-      {super.key,});
+class NumberCheckScreen extends ConsumerWidget {
+  final String title;
+  const NumberCheckScreen({
+    super.key,
+    required this.title,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      appBar: MyAppBar(title: title),
       body: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -35,6 +35,9 @@ class _CurrentTimeState extends State<CurrentTime> {
 
   @override
   Widget build(BuildContext context) {
-    return Text(_currentTime);
+    return Text(
+      _currentTime,
+      style: TextStyle(color: Colors.white),
+    );
   }
 }
