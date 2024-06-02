@@ -1,11 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pcg_charger/park_data.dart';
 import 'package:pcg_charger/screens/change_car_num_screen/change_car_num_screen.dart';
 import 'package:pcg_charger/screens/charging_screen/charging_screen.dart';
 import 'package:pcg_charger/screens/homepage/home_page.dart';
 import 'package:pcg_charger/screens/number_check_screen/number_check_page.dart';
 import 'package:pcg_charger/screens/select_option_screen/select_option_screen.dart';
 import 'package:pcg_charger/screens/set_option_screen/set_option_screen.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(
@@ -15,13 +20,24 @@ void main() {
   );
 }
 
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+class MyApp extends ConsumerStatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // ref.read(chargeDataProvider).updateChargeData(ChargeData.makeData());
+  _MyAppState createState() => _MyAppState();
+}
 
+class _MyAppState extends ConsumerState<MyApp> {
+  late IO.Socket socket;
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'pcg_charger_front',
@@ -41,5 +57,39 @@ class MyApp extends ConsumerWidget {
         '/charging': (context) => const ChargingScreen(),
       },
     );
+  }
+
+  void getData() async {
+    String url = 'https://api.parkchargego.link/api/v1/park/info';
+    Uri uri = Uri.parse(url);
+    http.Response response = await http.get(
+      uri,
+      headers: {'manage-code': "asdf"},
+    );
+    ref.read(parkDataProvider).updateParkData(
+          ParkData.fromJson(
+            jsonDecode(response.body),
+          ),
+        );
+    debugPrint("${ref.read(parkDataProvider).ip}");
+    IO.Socket socket = IO.io(
+      'http://${ref.read(parkDataProvider).ip}:3000',
+      <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': true,
+      },
+    );
+    ref.read(parkDataProvider).updateSocket(socket);
+    socket.on('connect', (_) {
+      debugPrint('connected to the server');
+    });
+
+    socket.on('disconnect', (reason) {
+      debugPrint('disconnected $reason');
+    });
+
+    socket.on('error', (error) {
+      debugPrint('Error: $error');
+    });
   }
 }

@@ -76,14 +76,12 @@ class _ChangeCarNumScreenState extends State<ChangeCarNumScreen> {
         carNum += value;
       });
     }
-    debugPrint("마지막문자:${carNum.substring(carNum.length - 1)}");
   }
 
   void deleteCarNum() {
     setState(() {
       carNum = carNum.substring(0, carNum.length - 1);
     });
-    debugPrint(carNum);
   }
 
   @override
