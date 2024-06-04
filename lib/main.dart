@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pcg_charger/park_data.dart';
 import 'package:pcg_charger/screens/change_car_num_screen/change_car_num_screen.dart';
@@ -33,6 +34,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     getData();
   }
 
@@ -71,15 +73,16 @@ class _MyAppState extends ConsumerState<MyApp> {
             jsonDecode(response.body),
           ),
         );
-    debugPrint("${ref.read(parkDataProvider).ip}");
+    final ip = ref.read(parkDataProvider).ip;
+    debugPrint("http://$ip:6000");
     IO.Socket socket = IO.io(
-      'http://${ref.read(parkDataProvider).ip}:3000',
+      'http://${ref.read(parkDataProvider).ip}:6000',
       <String, dynamic>{
         'transports': ['websocket'],
         'autoConnect': true,
+        'extraHeaders': {'manage-code': 'asdf'}
       },
     );
-    ref.read(parkDataProvider).updateSocket(socket);
     socket.on('connect', (_) {
       debugPrint('connected to the server');
     });
@@ -91,5 +94,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     socket.on('error', (error) {
       debugPrint('Error: $error');
     });
+
+    ref.read(parkDataProvider).updateSocket(socket);
   }
 }

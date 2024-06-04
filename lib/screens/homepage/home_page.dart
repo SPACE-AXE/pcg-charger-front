@@ -31,9 +31,6 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 168,
               child: Consumer(
                 builder: (context, ref, child) {
-                  ChargeData data = ChargeData.makeData('38서 6107');
-                  debugPrint("data: ${data.carNum}");
-                  ref.read(chargeDataProvider).updateChargeData(data);
                   return ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       alignment: Alignment.center,

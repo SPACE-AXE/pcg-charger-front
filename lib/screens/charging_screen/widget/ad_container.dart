@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pcg_charger/charge_data.dart';
+import 'package:pcg_charger/park_data.dart';
 import 'package:pcg_charger/screens/charging_screen/widget/ad_slider.dart';
 import 'package:pcg_charger/screens/homepage/widget/MyElevatedBtn.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-class AdContent extends StatefulWidget {
+class AdContent extends ConsumerStatefulWidget {
   bool isCharging;
   final Function() setIsCharging;
   AdContent({super.key, required this.isCharging, required this.setIsCharging});
 
   @override
-  State<AdContent> createState() => _AdContentState();
+  _AdContentState createState() => _AdContentState();
 }
 
-class _AdContentState extends State<AdContent> {
+class _AdContentState extends ConsumerState<AdContent> {
+  late IO.Socket socket;
+  @override
+  void initState() {
+    super.initState();
+    socket = ref.read(parkDataProvider).socket!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -50,10 +59,17 @@ class _AdContentState extends State<AdContent> {
                 onPressed: () {
                   debugPrint("ref: ${ref.read(chargeDataProvider).toJson()}");
                   widget.isCharging
-                      ? widget.setIsCharging()
-                      : Navigator.pushNamed(
+                      ? {
+                          socket.emit(
+                            'chargeFinish',
+                            {'carNum': ref.read(chargeDataProvider).carNum},
+                          ),
+                          widget.setIsCharging(),
+                        }
+                      : Navigator.pushNamedAndRemoveUntil(
                           context,
                           "/",
+                          (route) => false,
                         );
                 },
                 child: Text(

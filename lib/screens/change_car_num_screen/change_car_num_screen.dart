@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pcg_charger/charge_data.dart';
+import 'package:pcg_charger/park_data.dart';
 import 'package:pcg_charger/screens/change_car_num_screen/widget/keyboard_container.dart';
 import 'package:pcg_charger/screens/homepage/widget/MyElevatedBtn.dart';
 import 'package:pcg_charger/widget/app_bar.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChangeCarNumScreen extends StatefulWidget {
   const ChangeCarNumScreen({super.key});
@@ -137,8 +141,6 @@ class _ChangeCarNumScreenState extends State<ChangeCarNumScreen> {
                 flex: 1,
                 child: Consumer(
                   builder: (context, ref, child) {
-                    ref.read(chargeDataProvider).updateCarNum(carNum);
-                    debugPrint("${ref.read(chargeDataProvider)}");
                     return ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         alignment: Alignment.center,
@@ -151,7 +153,7 @@ class _ChangeCarNumScreenState extends State<ChangeCarNumScreen> {
                         ),
                       ),
                       onPressed: () async {
-                        Navigator.pushNamed(context, '/selectoption');
+                        checkCarNum(carNum, ref);
                       },
                       child: Text(
                         "확인",
@@ -174,5 +176,56 @@ class _ChangeCarNumScreenState extends State<ChangeCarNumScreen> {
         ],
       ),
     );
+  }
+
+  void checkCarNum(String carNum, WidgetRef ref) async {
+    IO.Socket socket = ref.read(parkDataProvider).socket!;
+    final completer = Completer<Map<String, dynamic>>();
+    socket.emitWithAck('getUnpaid', {'carNum': carNum}, ack: (data) {
+      completer.complete(data);
+    });
+    Map<String, dynamic> result = await completer.future;
+    debugPrint("${result}");
+    if (result.containsKey('paymentId')) {
+      if (result['chargeTime'] == null) {
+        ref.read(chargeDataProvider).updateCarNum(carNum);
+        debugPrint("${ref.read(chargeDataProvider).carNum}");
+        Navigator.pushNamed(context, '/selectoption');
+      } else {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("중복 충전"),
+              content: const Text("충전을 2회 이상 진행할 수 없습니다."),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("닫기"))
+              ],
+            );
+          },
+        );
+      }
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("차량 번호 오류"),
+            content: const Text("입차되지 않은 차량입니다."),
+            actions: [
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("닫기"))
+            ],
+          );
+        },
+      );
+    }
   }
 }

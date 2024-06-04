@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pcg_charger/charge_data.dart';
+import 'package:pcg_charger/park_data.dart';
 import 'package:pcg_charger/widget/app_bar.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 final priceOptions = [
   '1',
@@ -39,6 +41,7 @@ class SetOptionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    IO.Socket socket = ref.read(parkDataProvider).socket!;
     Widget makeWidgetList() {
       final option = ref.read(chargeDataProvider).chargeOption;
       List<Widget> list = [];
@@ -68,8 +71,18 @@ class SetOptionScreen extends ConsumerWidget {
                   ),
                 ),
                 onPressed: () async {
-                  ref.read(chargeDataProvider).setOption('price', option);
-                  Navigator.pushNamed(context, '/charging');
+                  option == '기타'
+                      ? null
+                      : {
+                          ref
+                              .read(chargeDataProvider)
+                              .setOption('price', option),
+                          socket.emit(
+                            'chargeStart',
+                            {'carNum': ref.read(chargeDataProvider).carNum},
+                          ),
+                          Navigator.pushNamed(context, '/charging'),
+                        };
                 },
               );
             });
@@ -98,8 +111,18 @@ class SetOptionScreen extends ConsumerWidget {
                   ),
                 ),
                 onPressed: () async {
-                  ref.read(chargeDataProvider).setOption('time', option);
-                  Navigator.pushNamed(context, '/charging');
+                  option == '기타'
+                      ? null
+                      : {
+                          ref
+                              .read(chargeDataProvider)
+                              .setOption('time', option),
+                          socket.emit(
+                            'chargeStart',
+                            {'carNum': ref.read(chargeDataProvider).carNum},
+                          ),
+                          Navigator.pushNamed(context, '/charging'),
+                        };
                 },
               );
             });
@@ -107,33 +130,47 @@ class SetOptionScreen extends ConsumerWidget {
           break;
         case 'amount':
           debugPrint("option: $option");
-          list = amountOptions.map((option) {
-            return Consumer(builder: (context, ref, child) {
-              return ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  alignment: Alignment.center,
-                  fixedSize: const Size(100, 100),
-                  backgroundColor: const Color(0xff39c5bb),
-                  foregroundColor: Colors.white,
-                  elevation: 5,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text(
-                  option == '기타' ? '$option' : '$option Kwh',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onPressed: () async {
-                  ref.read(chargeDataProvider).setOption('amount', option);
-                  Navigator.pushNamed(context, '/charging');
+          list = amountOptions.map(
+            (option) {
+              return Consumer(
+                builder: (context, ref, child) {
+                  return ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      alignment: Alignment.center,
+                      fixedSize: const Size(100, 100),
+                      backgroundColor: const Color(0xff39c5bb),
+                      foregroundColor: Colors.white,
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      option == '기타' ? '$option' : '$option Kwh',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onPressed: () async {
+                      option == '기타'
+                          ? null
+                          : {
+                              ref
+                                  .read(chargeDataProvider)
+                                  .setOption('amount', option),
+                              socket.emit(
+                                'chargeStart',
+                                {'carNum': ref.read(chargeDataProvider).carNum},
+                              ),
+                              Navigator.pushNamed(context, '/charging'),
+                            };
+                    },
+                  );
                 },
               );
-            });
-          }).toList();
+            },
+          ).toList();
           break;
       }
       Widget widget = Expanded(

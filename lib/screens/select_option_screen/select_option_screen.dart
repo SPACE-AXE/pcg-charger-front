@@ -130,7 +130,7 @@ class _SelectOptionScreenState extends State<SelectOptionScreen> {
             Expanded(
               flex: 2,
               child: Text(
-                "충전 요금: 100 / Kwh",
+                "충전 요금: 10 / Kwh",
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,

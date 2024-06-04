@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pcg_charger/charge_data.dart';
+import 'package:pcg_charger/park_data.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChargingStatus extends ConsumerStatefulWidget {
   final data;
@@ -22,10 +24,12 @@ class _ChargingStatusState extends ConsumerState<ChargingStatus> {
   int chargeAmount = 0;
   int chargePrice = 0;
   int setTime = 0;
+  late IO.Socket socket;
 
   @override
   void initState() {
     super.initState();
+    socket = ref.read(parkDataProvider).socket!;
     setState(() {
       setTime = int.parse(widget.data.setTime);
     });
@@ -36,7 +40,9 @@ class _ChargingStatusState extends ConsumerState<ChargingStatus> {
             chargePrice.toString(),
             chargeAmount.toString(),
           );
-      if (setTime + 1 == chargeTime) {
+      if (setTime == chargeTime) {
+        socket.emit(
+            'chargeFinish', {'carNum': ref.read(chargeDataProvider).carNum});
         widget.setIsCharging();
       }
     });
